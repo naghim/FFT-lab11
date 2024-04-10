@@ -1,47 +1,22 @@
 # Labor 11
 
-## Diagramok készítése Qt-ben
-
-Diagramok elkészítéséhez a [Qt Charts](https://doc.qt.io/qt-5/qtcharts-index.html) könyvtárát/modulját fogjuk használni, amely könnyen használható diagram-összetevőket tartalmaz. Ennek érdekében a projektfájlban majd hozzá kell adjuk: ```QT += charts```. 
+Komplexebb alkalmazások készítése.
 
 ## Feladatok
 
-1. Próbáljunk ki különböző diagramokat. Készítsünk legalább 5 értékből álló: 
-  *  vonaldiagramot (_linechart_ - s ennek a görbés változatát _splinechart_, vagyis a pontokat egyenesek helyett görbék kötik össze),
-  *  tortadiagramot (_piechart_), 
-  *  oszlopdiagramot (_barchart_ - ennél is próbáljuk ki a horizontális és vertikális elrendezést) stb.
-
-<img src="https://i.ibb.co/MgL4dHT/charts.png" align="center" />
-
-2. Készítsünk "élő" vonaldiagramot, amelyet folyamatosan eltolunk (adunk hozzá új, véletlenszerűen kigenerált pontot, a régit pedig töröljük). Ennek megfelelően állítsuk a tengely címkéit is. Állítsuk át a vonal/háttér színét is tetszőleges színűre. 
-
-3. Az előző feladatot módosítsuk annyiban, hogy a véletlenszerűen kigenerált pontok helyett az aktuális CPU kihasználtságot tüntessük fel. A kihasználtságot a következőképp tudjuk lekérni: 
-
-```
-#include <Windows.h>
-
-static float CalculateCPULoad(unsigned long long idleTicks, unsigned long long totalTicks)
-{
-   static unsigned long long _previousTotalTicks = 0;
-   static unsigned long long _previousIdleTicks = 0;
-
-   unsigned long long totalTicksSinceLastTime = totalTicks-_previousTotalTicks;
-   unsigned long long idleTicksSinceLastTime  = idleTicks-_previousIdleTicks;
-
-   float ret = 1.0f-((totalTicksSinceLastTime > 0) ? ((float)idleTicksSinceLastTime)/totalTicksSinceLastTime : 0);
-
-   _previousTotalTicks = totalTicks;
-   _previousIdleTicks  = idleTicks;
-   return ret;
-}
-
-static unsigned long long FileTimeToInt64(const FILETIME & ft) {return (((unsigned long long)(ft.dwHighDateTime))<<32)|((unsigned long long)ft.dwLowDateTime);}
-
-float GetCPULoad()
-{
-   FILETIME idleTime, kernelTime, userTime;
-   return GetSystemTimes(&idleTime, &kernelTime, &userTime) ? CalculateCPULoad(FileTimeToInt64(idleTime), FileTimeToInt64(kernelTime)+FileTimeToInt64(userTime)) : -1.0f;
-}
-```
-
-[Forrás](https://stackoverflow.com/questions/23143693/retrieving-cpu-load-percent-total-in-windows-with-c)
+<img src="https://i.ibb.co/TMRp6W9/blockbuster.png" width="300px" align="left"> 
+<br />
+<p>
+  1. Készítsünk egy <a href="https://elgoog.im/breakout">Breakout játékot</a>. Egy 600x370-as ablakban jelenítsünk meg 7x5 téglát, amelyet ki tudunk majd törni. A megkezdett játékot bővítsük ki a következőképp:
+  <ul>
+    <li> készítsünk <i>Game Over</i> feliratot játék végén (ehhez használhatjuk akár a <code><a href="[https://doc.qt.io/qt-5/qgraphicsscene.html#addText]">QGraphicsScene::addText</a></code> metódusát), illetve implementáljunk egy újrakezdhetőségi mechanizmust (legyen az visszaszámolós, vagy menüből kiválaszható opció)</li>
+    <li> adjunk lehetőséget a menüből átállítani a téglák (és/vagy golyó, csúszka) színét</li>
+    <li> adjunk lehetőséget nehezebb játékmód kiválasztására, ahol: 
+         <ol>
+           <li> a téglák kitöréséhez megemeljük az ütközések számát, illetve a golyó sebességét</li>
+           <li> illetve egy másikat, amely során növeljük a golyó sebességét a kiütött téglák függvényében</li>
+         </ol>
+     </li>
+    <li> a status bar részen jelenítsük meg hány tégla maradt, illetve hányat törtünk ki</li>
+  <ul>
+</p>
