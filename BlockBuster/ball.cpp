@@ -1,121 +1,126 @@
 #include "ball.h"
+#include <QRadialGradient>
+#include <QTimer>
+#include "paddle.h"
+#include "block.h"
+#include "game.h"
 
+const int Ball::BALL_DIAMETER = 30;
+const int Ball::FPS = 15;
+const int Ball::COLLISION_TRESHHOLD = 15;
+const int Ball::INFLU_FACTOR = 15; // minél kisebb, annál élesebben/gyorsabban reagál a változásokra a golyó
 
-Ball::Ball(QGraphicsItem *parent): QGraphicsEllipseItem(parent)
+Ball::Ball(QGraphicsItem *parent) : QGraphicsEllipseItem(parent)
 {
-    setRect(0, 0, 30, 30);
-    QRadialGradient radGrad(QPoint(25,25), 25);
-    radGrad.setColorAt(0, QRgb(0x9c0412));
-    radGrad.setColorAt(1, QRgb(0xfc3468));
+	setRect(0, 0, BALL_DIAMETER, BALL_DIAMETER);
+	QRadialGradient radGrad(QPoint(BALL_DIAMETER / 2 + 10, BALL_DIAMETER / 2 + 10), BALL_DIAMETER / 2 + 10);
+	radGrad.setColorAt(0, QRgb(0x9c0412)); // sötét vörös
+	radGrad.setColorAt(1, QRgb(0xfc3468)); // világos piros
+	setBrush(radGrad);
 
-    //setPen(QPen(Qt::NoPen));
-    setBrush(radGrad);
+	xDirection = 0;
+	yDirection = -5; // felfelé mozdul a golyó
 
-    xDirection = 0;
-    yDirection = -5;
-
-    timer = new QTimer();
-    connect(timer, &QTimer::timeout, this, &Ball::move);
-    timer->start(15);
+	timer = new QTimer();
+	connect(timer, &QTimer::timeout, this, &Ball::move);
+	timer->start(FPS);
 }
 
 void Ball::move()
 {
-    reverseDirectionIfOutOfBounds();
-    handlePaddleCollision();
-    handleBlockCollision();
+	reverseDirectionIfOutOfBounds();
+	handlePaddleCollision();
+	handleBlockCollision();
 
-    moveBy(xDirection, yDirection);
+	moveBy(xDirection, yDirection);
 }
 
 double Ball::getCenterX()
 {
-    return x() + rect().width()/2;
+	return x() + rect().width() / 2;
 }
 
 void Ball::reverseDirectionIfOutOfBounds()
 {
-    double appWidth = game->width();
+	double appWidth = Game::WINDOW_SIZE.width();
+	int loseHeight = Game::WINDOW_SIZE.height();
 
-    //bal oldal
-    if ( (mapToScene(rect().topLeft())).x() <= 0 )
-    {
-        xDirection = -1 * xDirection;
-    }
+	// bal oldal
+	if ((mapToScene(rect().topLeft())).x() <= 0)
+	{
+		xDirection = -1 * xDirection; // megfordítjuk az x irányt, mivel sokat használjuk, ezért lehetne ez külön függvény is
+	}
 
-    //jobb oldal
-    if ( (mapToScene(rect().topRight())).x() >= appWidth )
-    {
-        xDirection = -1 * xDirection;
-    }
+	// jobb oldal
+	else if ((mapToScene(rect().topRight())).x() >= appWidth)
+	{
+		xDirection = -1 * xDirection;
+	}
 
-    //fenti oldal
-    if ( (mapToScene(rect().topLeft())).y() <= 0 )
-    {
-        yDirection = -1 * yDirection;
-    }
+	// fenti oldal
+	else if ((mapToScene(rect().topLeft())).y() <= 0)
+	{
+		yDirection = -1 * yDirection;
+	}
 
-    //lenti oldal
-    if ( (mapToScene(rect().bottomRight())).y() > 650 )
-    {
-        gameFinished(Ball::Lost);
-    }
+	// lenti oldal
+	else if ((mapToScene(rect().bottomRight())).y() > loseHeight)
+	{
+		// a golyó közepe eléri a képernyő aljáról (kiesett)
+		timer->disconnect(this);
+		timer->stop();
+		emit defeat();
+	}
 }
 void Ball::handlePaddleCollision()
 {
-    QList<QGraphicsItem*> collidedItems = collidingItems();
-    int n = collidedItems.size();
-    for(int i=0; i<n; i++){
-        Paddle* paddle = dynamic_cast<Paddle*>(collidedItems[i]);
-        if (paddle){
-            yDirection = -1 * yDirection;
-            double ballX = getCenterX();
-            double paddleX = paddle->getCenterX();
+	QList<QGraphicsItem *> collidedItems = collidingItems();
 
-            double delta = ballX - paddleX;
-            xDirection = (xDirection + delta)/15;
+	for (QGraphicsItem *item : collidedItems)
+	{
+		Paddle *paddle = dynamic_cast<Paddle *>(item);
 
-            return;
-        }
-    }
+		if (paddle)
+		{
+			yDirection = -1 * yDirection;
+
+			double ballCenterX = getCenterX();
+			double paddleCenterX = paddle->getCenterX();
+			double delta = ballCenterX - paddleCenterX;
+
+			xDirection = (xDirection + delta) / INFLU_FACTOR;
+
+			return; // csak egy ütközés / frame érdekel minket
+		}
+	}
 }
 void Ball::handleBlockCollision()
 {
-    QList<QGraphicsItem*> collidedItems = collidingItems();
-    int n = collidedItems.size();
-    for(int i=0; i<n; i++){
-        Block* block = dynamic_cast<Block*>(collidedItems[i]);
-        if (block){
-            double ballX = pos().x();
-            double ballY = pos().y();
-            double blockX = block->pos().x();
-            double blockY = block->pos().y();
+	QList<QGraphicsItem *> collidedItems = collidingItems();
+	for (QGraphicsItem *item : collidedItems)
+	{
+		Block *block = dynamic_cast<Block *>(item);
 
-            if(ballY > blockY + 15)
-            {
-                yDirection *= -1;
-            }
+		if (block)
+		{
+			QPointF ballPos = pos();
+			QPointF blockPos = block->pos();
+			// avagy:
+			// double blockX = block->pos().x();
+			// double blockY = block->pos().y();
 
-            if(ballX > blockX + 15)
-            {
-                xDirection *= -1;
-            }
+			if (ballPos.y() > blockPos.y() + COLLISION_TRESHHOLD)
+			{
+				yDirection *= -1;
+			}
 
-            game->scene->removeItem(block);
-            delete block;
-            // ha nincs tobb tegla, nyert
+			else if (ballPos.x() >= blockPos.x() + COLLISION_TRESHHOLD)
+			{
+				xDirection *= -1;
+			}
 
-            return;
-        }
-    }
-}
-
-void Ball::gameFinished(Ball::Finisher condition)
-{
-    disconnect(timer, &QTimer::timeout, this, &Ball::move);
-    if (condition == Ball::Won) {
-        game->victory();
-        return;
-    }
-    if (condition == Ball::Lost) game->lost();
+			emit blockRemoved(block);
+			return;
+		}
+	}
 }

@@ -2,14 +2,14 @@
 #define BLOCK_H
 
 #include <QGraphicsRectItem>
-#include <QLinearGradient>
-#include <QPen>
 
-class Block: public QObject, public QGraphicsRectItem
+class Block : public QObject, public QGraphicsRectItem
 {
     Q_OBJECT
 public:
-    Block(QGraphicsItem *parent = NULL);
+    static const QSize BLOCK_SIZE;
+
+    explicit Block(QGraphicsItem *parent = nullptr);
 };
 
 #endif // BLOCK_H

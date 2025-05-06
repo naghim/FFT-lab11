@@ -2,29 +2,32 @@
 #define BALL_H
 
 #include <QGraphicsEllipseItem>
-#include <QRadialGradient>
 #include <QTimer>
-#include "game.h"
-#include "paddle.h"
-#include "block.h"
 
-extern Game *game;
+class Block;
 
-class Ball: public QObject, public QGraphicsEllipseItem
+class Ball : public QObject, public QGraphicsEllipseItem
 {
     Q_OBJECT
 public:
-    Ball(QGraphicsItem* parent = NULL);
+    static const int BALL_DIAMETER;
+    static const int FPS;
+    static const int COLLISION_TRESHHOLD;
+    static const int INFLU_FACTOR;
+
+    explicit Ball(QGraphicsItem *parent = nullptr);
+    ~Ball() override = default;
+
     double getCenterX();
     QTimer *timer;
 
-    enum Finisher{
-        Lost,
-        Won
-    };
-
 public slots:
     void move();
+
+signals:
+    void victory();
+    void defeat();
+    void blockRemoved(Block *block);
 
 private:
     double xDirection;
@@ -33,7 +36,6 @@ private:
     void reverseDirectionIfOutOfBounds();
     void handlePaddleCollision();
     void handleBlockCollision();
-    void gameFinished(Ball::Finisher condition);
 };
 
 #endif // BALL_H

@@ -1,32 +1,49 @@
 #ifndef GAME_H
 #define GAME_H
 
-#include <QMainWindow>
 #include <QGraphicsView>
 #include <QGraphicsScene>
-#include "paddle.h"
-#include "block.h"
+#include <QSize>
+
+class QGraphicsScene;
+class Ball;
+class Paddle;
+class Block;
 
 class Game : public QGraphicsView
 {
-    Q_OBJECT
+	Q_OBJECT
 
 public:
-    Game(QWidget *parent = nullptr);
-    ~Game();
+	static const int NUM_BLOCKS;
+	static const int NUM_COLS;
+	static const int NUM_ROWS;
+	static const QSize WINDOW_SIZE;
+	static const QSize INITIAL_BALL_POS;
+	static const QSize INITIAL_PADDLE_POS;
+	static const int BLOCK_SPACING;
 
-    void start();
-    void victory();
-    void lost();
+	QGraphicsScene *scene;
 
-    void generateBlockGrid();
-    void generateBlockCol(double);
+	Game(QWidget *parent = nullptr);
+	~Game();
 
-    QGraphicsScene* scene;
-    int numberOfBlocks = 7*5;
-    int numOfCols = 7;
-    int numOfRows = 5;
-    int heightOfBlocks = 25;
-    int widthOfBlocks = 50;
+	void start();
+
+	void generateBlockGrid();
+	void generateBlockCol(int);
+	int remainingBlocks();
+
+	void removeBlock(Block *block);
+
+public slots:
+	void onVictory();
+	void onDefeat();
+	void onBlockRemoved(Block *block);
+
+private:
+	Ball *ball;
+	Paddle *paddle;
 };
+
 #endif // GAME_H

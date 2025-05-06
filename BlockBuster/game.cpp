@@ -1,63 +1,99 @@
 #include "game.h"
 #include "ball.h"
+#include "paddle.h"
+#include "block.h"
+
+const int Game::NUM_BLOCKS = 35;
+const int Game::NUM_COLS = 7;
+const int Game::NUM_ROWS = 5;
+const QSize Game::WINDOW_SIZE(370, 600);
+const QSize Game::INITIAL_BALL_POS(200, 500);
+const QSize Game::INITIAL_PADDLE_POS(150, 575);
+const int Game::BLOCK_SPACING = 3;
 
 Game::Game(QWidget *parent)
-    : QGraphicsView(parent)
+	: QGraphicsView(parent)
 {
-    scene = new QGraphicsScene(0,0,370,600);
-    setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    setFixedSize(370, 600);
+	scene = new QGraphicsScene(0, 0, WINDOW_SIZE.width(), WINDOW_SIZE.height());
+	setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+	setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+	setFixedSize(WINDOW_SIZE.width(), WINDOW_SIZE.height());
 
-    setScene(scene);
-    setMouseTracking(true);
+	setScene(scene);
+	setMouseTracking(true);
 }
 
-Game::~Game(){}
+Game::~Game() {}
 
 void Game::start()
 {
-    //golyo
-    Ball* ball = new Ball();
-    ball->setPos(200, 500);
-    scene->addItem(ball);
+	// golyó
+	ball = new Ball();
+	ball->setPos(INITIAL_BALL_POS.width(), INITIAL_BALL_POS.height());
+	scene->addItem(ball);
 
-    //csuszka
-    Paddle* paddle = new Paddle();
-    paddle->setPos(150, 575);
-    scene->addItem(paddle);
-    paddle->grabMouse();
+	// csúszka
+	paddle = new Paddle;
+	paddle->setPos(INITIAL_PADDLE_POS.width(), INITIAL_PADDLE_POS.height());
+	scene->addItem(paddle);
+	paddle->grabMouse();
 
-    //teglak
-    generateBlockGrid();
+	// téglák
+	generateBlockGrid();
+
+	connect(ball, &Ball::victory, this, &Game::onVictory);
+	connect(ball, &Ball::defeat, this, &Game::onDefeat);
+	connect(ball, &Ball::blockRemoved, this, &Game::onBlockRemoved);
 }
 
-void Game::victory()
+void Game::onVictory()
 {
-    qDebug() << "Victory";
+	qDebug() << "Victory";
+	// TODO
 }
 
-void Game::lost()
+void Game::onDefeat()
 {
-    qDebug() << "Game over";
+	qDebug() << "Game over";
+	// ha nem működik a qDebug, akkor: fprintf(stderr, "%s\n", "Game over");
+	// TODO
 }
 
 void Game::generateBlockGrid()
 {
-    for(int i=0; i< numOfCols;i++)
-    {
-        //oszlop szama * (block merete + koztuk levo hely)
-        generateBlockCol(i*(widthOfBlocks+3));
-    }
+	for (int i = 0; i < NUM_COLS; i++)
+	{
+		// oszlop száma * (block mérete + köztök lévő hely)
+		generateBlockCol(i * (Block::BLOCK_SIZE.width() + BLOCK_SPACING));
+	}
 }
 
-void Game::generateBlockCol(double x)
+void Game::generateBlockCol(int x)
 {
-    for(int i=0; i< numOfRows; i++)
-    {
-        Block *block = new Block();
-        //hanyadik oszlop, hanyadik az oszlopban*(blocknak a magassaga + a hezag merete)
-        block->setPos(x, i*(heightOfBlocks+3));
-        scene->addItem(block);
-    }
+	for (int i = 0; i < NUM_ROWS; i++)
+	{
+		Block *block = new Block();
+		// hanyadik oszlop, hanyadik az oszlopban * (blocknak a magassága + a hézag mérete)
+		block->setPos(x, i * (Block::BLOCK_SIZE.height() + BLOCK_SPACING));
+		scene->addItem(block);
+	}
+}
+
+int Game::remainingBlocks()
+{
+	// TODO
+
+	return 43;
+}
+
+void Game::onBlockRemoved(Block *block)
+{
+	scene->removeItem(block);
+	delete block;
+
+	if (remainingBlocks() == 0)
+	{
+		// Nincs több blokk, győzelem
+		onVictory();
+	}
 }

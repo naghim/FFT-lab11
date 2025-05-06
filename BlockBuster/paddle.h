@@ -2,19 +2,19 @@
 #define PADDLE_H
 
 #include <QGraphicsRectItem>
-#include <QLinearGradient>
-#include <QPen>
 #include <QGraphicsSceneMouseEvent>
 
-class Paddle: public QObject, public QGraphicsRectItem
+class Paddle : public QObject, public QGraphicsRectItem
 {
     Q_OBJECT
 public:
-    Paddle(QGraphicsItem* parent = NULL);
+    static const QSize PADDLE_SIZE;
+
+    Paddle(QGraphicsItem *parent = nullptr);
     double getCenterX();
 
 protected:
-    void mouseMoveEvent(QGraphicsSceneMouseEvent*) override;
+    void mouseMoveEvent(QGraphicsSceneMouseEvent *) override;
 };
 
 #endif // PADDLE_H

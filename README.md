@@ -4,7 +4,7 @@ Komplexebb alkalmazások készítése.
 
 ## Feladatok
 
-<img src="https://i.ibb.co/TMRp6W9/blockbuster.png" width="300px" align="left"> 
+<img src="https://i.imgur.com/jZr2L6g.png" width="300px" align="left"> 
 <br />
 <p>
   1. Készítsünk egy <a href="https://elgoog.im/breakout">Breakout játékot</a>. Egy 600x370-as ablakban jelenítsünk meg 7x5 téglát, amelyet ki tudunk majd törni. A megkezdett játékot bővítsük ki a következőképp:
